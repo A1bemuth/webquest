@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.IO;
-using System.Web;
-using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net.Http;
 using System.Net;
@@ -16,7 +13,7 @@ namespace WebServerTemplate
 
 		static void Main(string[] args)
 		{
-			var listener = new TcpListener(IPAddress.Any, 80);
+			var listener = new TcpListener(IPAddress.Any, 333);
 			listener.Start();
 
 			while (true)
@@ -27,12 +24,13 @@ namespace WebServerTemplate
 					using (var ns = new NetworkStream(socket) { ReadTimeout = 3000 })
 					{
 						var requestMessage = ReadRequestMessage(ns);
+						LogRequest(requestMessage);
 
 						var responseMessage = requestHandler.Handle(requestMessage);
 
 						responseMessage.SerializeToStream(ns);
+						LogResponse(responseMessage);
 
-						LogSession(requestMessage, responseMessage);
 						ns.Close();
 					}
 					socket.Disconnect(true);
@@ -40,7 +38,7 @@ namespace WebServerTemplate
 				catch (Exception e)
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(e.Message);
+					Console.WriteLine(e);
 					Console.ResetColor();
 				}
 				finally
@@ -91,20 +89,25 @@ namespace WebServerTemplate
 			return sb.ToString().TrimEnd('\r', '\n');
 		}
 
-		private static void LogSession(HttpRequestMessage request, HttpResponseMessage response)
+		private static void LogRequest(HttpRequestMessage request)
 		{
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Console.WriteLine(string.Format("{0} {1}", request.Method, request.Uri));
-			foreach(var header in request.Headers)
+			foreach (var header in request.Headers)
 			{
 				Console.WriteLine(string.Format("{0}: {1}", header.Key, header.Value));
 			}
-			if(request.Body != null)
+
+			if (request.Body != null)
 			{
 				Console.WriteLine();
 				Console.WriteLine(Encoding.ASCII.GetString(request.Body));
 				Console.WriteLine();
 			}
+		}
+
+		private static void LogResponse(HttpResponseMessage response)
+		{
 			Console.ForegroundColor = ConsoleColor.Green;
 			Console.WriteLine(string.Format("Response: {0} {1}", (int) response.StatusCode, response.StatusCode));
 			Console.WriteLine();
