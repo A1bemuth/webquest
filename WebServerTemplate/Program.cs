@@ -9,7 +9,7 @@ namespace WebServerTemplate
 {
 	class Program
 	{
-		private static IHttpRequestHandler requestHandler = new DummyRequestHandler();
+		private static IHttpRequestHandler requestHandler = new QuestRequestHandler();
 
 		static void Main(string[] args)
 		{
